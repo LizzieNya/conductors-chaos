@@ -1,0 +1,14 @@
+{
+  "source": {
+    "branch": "main",
+    "path": "/",
+    "github_action": {
+      "config": {
+        "runtime": "nodejs20",
+        "working_directory": ".",
+        "build_command": "npm ci && npm run build",
+        "output_directory": "dist"
+      }
+    }
+  }
+}

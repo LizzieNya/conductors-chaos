@@ -60,10 +60,10 @@ export const EndScreen: React.FC<{ onReplay: () => void; onMenu: () => void; dif
 
   // Calculate coins earned
   useEffect(() => {
-    let baseCoins = Math.floor(scoreData.totalScore / 10);
+    let baseCoins = Math.floor(scoreData.totalScore / 15); // Reduced from /10
     
     // Bonus for stars
-    baseCoins += scoreData.stars * 50;
+    baseCoins += scoreData.stars * 30; // Reduced from 50
     
     // Encore bonus upgrade
     if (scoreData.stars >= 4 && hasUpgrade('encore_bonus')) {

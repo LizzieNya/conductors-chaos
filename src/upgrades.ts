@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { useAchievementStore } from './achievements';
 
 export type UpgradeCategory = 'speed' | 'combo' | 'power' | 'special';
 
@@ -34,7 +33,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'speed',
     icon: '⚡',
     maxLevel: 5,
-    baseCost: 500,
+    baseCost: 1500,
     effect: (level) => ({ fixSpeedMultiplier: 1 + level * 0.15 }),
   },
   {
@@ -44,7 +43,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'speed',
     icon: '🎯',
     maxLevel: 5,
-    baseCost: 600,
+    baseCost: 2000,
     effect: (level) => ({ chaosDurationMultiplier: 1 + level * 0.2 }),
   },
   {
@@ -54,7 +53,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'speed',
     icon: '🎵',
     maxLevel: 3,
-    baseCost: 800,
+    baseCost: 2500,
     effect: (level) => ({ beatWindowMultiplier: 1 + level * 0.3 }),
   },
 
@@ -66,7 +65,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'combo',
     icon: '🔥',
     maxLevel: 5,
-    baseCost: 700,
+    baseCost: 2000,
     effect: (level) => ({ comboScoreMultiplier: 1 + level * 0.2 }),
   },
   {
@@ -76,7 +75,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'combo',
     icon: '🌟',
     maxLevel: 3,
-    baseCost: 1000,
+    baseCost: 3000,
     effect: (level) => ({ startingCombo: level * 2 }),
   },
   {
@@ -86,7 +85,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'combo',
     icon: '💫',
     maxLevel: 4,
-    baseCost: 900,
+    baseCost: 2500,
     effect: (level) => ({ harmonyDecayMultiplier: 1 - level * 0.15 }),
   },
 
@@ -98,7 +97,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'power',
     icon: '🛡️',
     maxLevel: 5,
-    baseCost: 1200,
+    baseCost: 3500,
     effect: (level) => ({ spreadChance: 1 - level * 0.15 }),
   },
   {
@@ -108,7 +107,7 @@ export const UPGRADES: Upgrade[] = [
     category: 'power',
     icon: '✨',
     maxLevel: 3,
-    baseCost: 1500,
+    baseCost: 4000,
     effect: (level) => ({ autoFixChance: level * 0.08 }),
   },
 
@@ -120,8 +119,8 @@ export const UPGRADES: Upgrade[] = [
     category: 'special',
     icon: '⏰',
     maxLevel: 1,
-    baseCost: 2000,
-    effect: () => ({}), // Handled specially in engine
+    baseCost: 5000,
+    effect: () => ({}),
   },
   {
     id: 'perfect_pitch',
@@ -130,8 +129,8 @@ export const UPGRADES: Upgrade[] = [
     category: 'special',
     icon: '👁️',
     maxLevel: 1,
-    baseCost: 2500,
-    effect: () => ({}), // Handled specially in engine
+    baseCost: 6000,
+    effect: () => ({}),
   },
   {
     id: 'encore_bonus',
@@ -140,8 +139,8 @@ export const UPGRADES: Upgrade[] = [
     category: 'special',
     icon: '💰',
     maxLevel: 1,
-    baseCost: 1800,
-    effect: () => ({}), // Handled specially in scoring
+    baseCost: 4500,
+    effect: () => ({}),
   },
 ];
 
@@ -156,6 +155,7 @@ interface UpgradeState {
   getUpgradeCost: (upgradeId: string) => number;
   getTotalEffect: () => UpgradeEffect;
   hasUpgrade: (upgradeId: string) => boolean;
+  resetCoins: () => void;
 }
 
 export const useUpgradeStore = create<UpgradeState>((set, get) => {
@@ -203,11 +203,6 @@ export const useUpgradeStore = create<UpgradeState>((set, get) => {
       
       set({ upgradeLevels: newLevels });
       localStorage.setItem('conductors-chaos-upgrades', JSON.stringify(newLevels));
-      
-      // Check achievement
-      const uniqueUpgrades = Object.keys(newLevels).filter(id => newLevels[id] > 0).length;
-      useAchievementStore.getState().checkAchievement('upgrade_collector', uniqueUpgrades);
-      
       return true;
     },
 
@@ -242,7 +237,6 @@ export const useUpgradeStore = create<UpgradeState>((set, get) => {
         if (level > 0) {
           const effect = upgrade.effect(level);
           
-          // Multiply multiplicative effects
           if (effect.fixSpeedMultiplier) {
             totalEffect.fixSpeedMultiplier! *= effect.fixSpeedMultiplier;
           }
@@ -262,7 +256,6 @@ export const useUpgradeStore = create<UpgradeState>((set, get) => {
             totalEffect.harmonyDecayMultiplier! *= effect.harmonyDecayMultiplier;
           }
           
-          // Add additive effects
           if (effect.startingCombo) {
             totalEffect.startingCombo! += effect.startingCombo;
           }
@@ -277,6 +270,11 @@ export const useUpgradeStore = create<UpgradeState>((set, get) => {
 
     hasUpgrade: (upgradeId) => {
       return (get().upgradeLevels[upgradeId] || 0) > 0;
+    },
+
+    resetCoins: () => {
+      set({ coins: 0 });
+      localStorage.removeItem('conductors-chaos-coins');
     },
   };
 });

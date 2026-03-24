@@ -11,7 +11,7 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
   const [beatTimes, setBeatTimes] = useState<number[]>([]);
   const [currentBeat, setCurrentBeat] = useState(0);
   const bpm = 120;
-  const beatInterval = 60000 / bpm; // ms
+  const beatInterval = 60000 / bpm;
 
   useEffect(() => {
     const startTime = Date.now();
@@ -57,12 +57,12 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
       else if (diff < 200) goodTaps++;
     });
 
-    const score = perfectTaps * 200 + goodTaps * 100;
+    const finalScore = perfectTaps * 200 + goodTaps * 100;
     const success = perfectTaps >= 5;
 
     onComplete({
       success,
-      score,
+      score: finalScore,
       bonus: perfectTaps >= 7 ? 500 : 0,
     });
   };
@@ -87,9 +87,7 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
       }}
       onClick={handleTap}
     >
-      <div style={{ fontSize: 48, marginBottom: 20, color: '#fff' }}>
-        👆 Tempo Tap
-      </div>
+      <div style={{ fontSize: 48, marginBottom: 20, color: '#fff' }}>👆 Tempo Tap</div>
       <div style={{ fontSize: 24, marginBottom: 40, color: '#e9d5ff' }}>
         Time: {timeLeft}s | Taps: {taps.length}
       </div>

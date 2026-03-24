@@ -359,6 +359,78 @@ export class AudioMixer {
     }
   }
 
+  // Whiplash-inspired intense drum hit
+  playWhiplashHit() {
+    if (!this.ctx || !this.masterGain) return;
+    
+    // Kick drum with more punch
+    const osc = this.ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+
+    const envelope = this.ctx.createGain();
+    envelope.gain.setValueAtTime(0.9, this.ctx.currentTime);
+    envelope.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
+
+    osc.connect(envelope);
+    envelope.connect(this.masterGain);
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.4);
+  }
+
+  // Whiplash-inspired snare hit
+  playWhiplashSnare() {
+    if (!this.ctx || !this.masterGain) return;
+    
+    // White noise for snare
+    const bufferSize = this.ctx.sampleRate * 0.15;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.value = 1500;
+
+    const envelope = this.ctx.createGain();
+    envelope.gain.setValueAtTime(0.8, this.ctx.currentTime);
+    envelope.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(envelope);
+    envelope.connect(this.masterGain);
+    noise.start();
+  }
+
+  // Whiplash-inspired cymbal crash
+  playWhiplashCymbal() {
+    if (!this.ctx || !this.masterGain) return;
+    
+    // White noise for cymbal
+    const bufferSize = this.ctx.sampleRate * 1.0;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseFilter = this.ctx.createBiquadFilter();
+    noiseFilter.type = 'highpass';
+    noiseFilter.frequency.value = 2000;
+
+    const envelope = this.ctx.createGain();
+    envelope.gain.setValueAtTime(0.6, this.ctx.currentTime);
+    envelope.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.0);
+
+    noise.connect(noiseFilter);
+    noiseFilter.connect(envelope);
+    envelope.connect(this.masterGain);
+    noise.start();
+  }
+
   // Play warning horn when chaos initiates
   playWarning() {
     if (!this.ctx || !this.masterGain) return;

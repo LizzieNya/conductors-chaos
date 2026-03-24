@@ -18,6 +18,7 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
   const [basketX, setBasketX] = useState(400);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
+  const [combo, setCombo] = useState(0);
   const noteIdRef = useRef(0);
 
   useEffect(() => {
@@ -48,8 +49,13 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
               note.x > basketX - 40 &&
               note.x < basketX + 40
             ) {
-              setScore((s) => s + 100);
+              setScore((s) => s + 100 + combo * 50);
+              setCombo((c) => Math.min(c + 1, 10));
               return false;
+            }
+            // Reset combo on miss
+            if (note.y > 520) {
+              setCombo(0);
             }
             return note.y < 520;
           })
@@ -79,7 +85,7 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
       clearInterval(updateInterval);
       clearInterval(timer);
     };
-  }, [basketX, score]);
+  }, [basketX, score, combo]);
 
   return (
     <div
@@ -103,7 +109,7 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
       }}>
         <div>🎶 Note Catcher</div>
         <div style={{ fontSize: 20, marginTop: 10 }}>
-          Score: {score} | Time: {timeLeft}s
+          Score: {score} | Time: {timeLeft}s | Combo: x{combo}
         </div>
       </div>
 

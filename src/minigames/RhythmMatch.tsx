@@ -10,6 +10,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
   const [userPattern, setUserPattern] = useState<number[]>([]);
   const [showPattern, setShowPattern] = useState(true);
   const [timeLeft, setTimeLeft] = useState(8);
+  const [activeNote, setActiveNote] = useState<number | null>(null);
 
   useEffect(() => {
     // Generate random pattern
@@ -17,13 +18,23 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
     setPattern(newPattern);
 
     // Show pattern for 2 seconds
-    setTimeout(() => setShowPattern(false), 2000);
+    let step = 0;
+    const interval = setInterval(() => {
+      if (step < newPattern.length) {
+        setActiveNote(newPattern[step]);
+        setTimeout(() => setActiveNote(null), 400);
+        step++;
+      } else {
+        clearInterval(interval);
+        setTimeout(() => setShowPattern(false), 500);
+      }
+    }, 600);
 
-    // Countdown
     const timer = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
           clearInterval(timer);
+          clearInterval(interval);
           checkResult();
           return 0;
         }
@@ -31,7 +42,10 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      clearInterval(interval);
+    };
   }, []);
 
   const checkResult = () => {
@@ -43,6 +57,8 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
   const handleTap = (index: number) => {
     if (showPattern || userPattern.length >= pattern.length) return;
     setUserPattern([...userPattern, index]);
+    setActiveNote(index);
+    setTimeout(() => setActiveNote(null), 300);
     
     if (userPattern.length + 1 === pattern.length) {
       setTimeout(checkResult, 300);
@@ -63,8 +79,8 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
       justifyContent: 'center',
       zIndex: 1000,
     }}>
-      <div style={{ fontSize: 48, marginBottom: 20 }}>🎵 Rhythm Match</div>
-      <div style={{ fontSize: 24, marginBottom: 20, color: '#fbbf24' }}>Time: {timeLeft}s</div>
+      <div style={{ fontSize: 48, marginBottom: 20, color: '#fbbf24' }}>🎵 Rhythm Match</div>
+      <div style={{ fontSize: 24, marginBottom: 20, color: '#e5e7eb' }}>Time: {timeLeft}s</div>
       
       {showPattern ? (
         <div style={{ fontSize: 20, marginBottom: 30, color: '#60a5fa' }}>Watch the pattern...</div>
@@ -86,6 +102,8 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
               justifyContent: 'center',
               fontSize: 32,
               opacity: showPattern ? 1 : 0.3,
+              transform: activeNote === note ? 'scale(1.2)' : 'scale(1)',
+              transition: 'transform 0.2s',
             }}
           >
             {showPattern && labels[note]}
@@ -128,6 +146,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
                 fontSize: 40,
                 cursor: 'pointer',
                 transition: 'transform 0.1s',
+                boxShadow: activeNote === i ? '0 0 30px ' + color : 'none',
               }}
               onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
               onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}

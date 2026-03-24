@@ -104,9 +104,7 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
       justifyContent: 'center',
       zIndex: 1000,
     }}>
-      <div style={{ fontSize: 48, marginBottom: 20, color: '#fff' }}>
-        🎩 Conductor Says
-      </div>
+      <div style={{ fontSize: 48, marginBottom: 20, color: '#fff' }}>🎩 Conductor Says</div>
       <div style={{ fontSize: 20, marginBottom: 40, color: '#d1fae5' }}>
         Score: {score} | Time: {timeLeft}s
       </div>
@@ -127,15 +125,11 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
       )}
 
       {failed && (
-        <div style={{ fontSize: 48, color: '#fca5a5' }}>
-          ❌ Wrong!
-        </div>
+        <div style={{ fontSize: 48, color: '#fca5a5' }}>❌ Wrong!</div>
       )}
 
       {currentIndex >= commands.length && !failed && (
-        <div style={{ fontSize: 48, color: '#6ee7b7' }}>
-          ✅ Perfect!
-        </div>
+        <div style={{ fontSize: 48, color: '#6ee7b7' }}>✅ Perfect!</div>
       )}
 
       <div style={{ fontSize: 16, color: '#d1fae5', textAlign: 'center', marginTop: 40 }}>

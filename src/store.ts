@@ -153,7 +153,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   addBatonTrail: (x, y) =>
     set((s) => {
       const trail = [...s.batonTrail, { x, y, t: Date.now() }];
-      // Keep last 30 positions
       return { batonTrail: trail.slice(-30) };
     }),
   setBatonVelocity: (v) => set({ batonVelocity: v }),
@@ -194,12 +193,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     ).length;
     let harmony = (normalCount / sectionKeys.length) * 100;
     
-    // Apply harmony decay multiplier from upgrades when sections are chaotic
     if (normalCount < sectionKeys.length) {
       const upgrades = useUpgradeStore.getState().getTotalEffect();
       const decayMult = upgrades.harmonyDecayMultiplier || 1;
       const currentHarmony = state.harmonyMeter;
-      // Blend current with new based on decay multiplier
       harmony = currentHarmony + (harmony - currentHarmony) * (1 - decayMult * 0.5);
     }
     

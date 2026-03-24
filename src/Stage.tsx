@@ -1049,6 +1049,25 @@ export const Stage: React.FC = () => {
       // Audience
       drawAudience(ctx, 800, t, store.audienceReaction);
 
+      // Whiplash-style quotes during intense moments
+      if (store.combo >= 10 && Math.random() < 0.02) {
+        const quotes = ["Don't stop!", "More!", "Faster!", "Harder!", "Again!", "Again!"];
+        const quote = quotes[Math.floor(Math.random() * quotes.length)];
+        ctx.save();
+        ctx.translate(400, 200);
+        const scale = 1 + Math.sin(t * 5) * 0.2;
+        ctx.scale(scale, scale);
+        ctx.globalAlpha = 0.8;
+        ctx.font = '900 48px "Inter", system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ef4444';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 20;
+        ctx.fillText(quote, 0, 0);
+        ctx.restore();
+      }
+
       // Chaos warnings (Perfect Pitch upgrade)
       for (const warning of store.chaosWarnings) {
         if (store.concertTime >= warning.time - 2 && store.concertTime < warning.time) {
@@ -1214,6 +1233,17 @@ export const Stage: React.FC = () => {
           tctx.lineWidth = width;
           tctx.lineCap = 'round';
           tctx.stroke();
+        }
+        
+        // Add sparkles for fast movements
+        if (store.batonVelocity > 15) {
+          const lastTrail = trail[trail.length - 1];
+          if (Math.random() < 0.3) {
+            tctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.8})`;
+            tctx.beginPath();
+            tctx.arc(lastTrail.x + (Math.random() - 0.5) * 10, lastTrail.y + (Math.random() - 0.5) * 10, Math.random() * 3, 0, Math.PI * 2);
+            tctx.fill();
+          }
         }
       }
 
