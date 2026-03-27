@@ -39,6 +39,21 @@ const OSCILLATOR_TYPES: Record<OrchestraSection, OscillatorType> = {
   percussion: 'triangle',
 };
 
+// Song-specific BPM ranges
+const SONG_BPM_RANGES: Record<string, { min: number; max: number }> = {
+  classic: { min: 80, max: 120 },
+  jazz: { min: 100, max: 160 },
+  electronic: { min: 120, max: 140 },
+  spooky: { min: 60, max: 90 },
+  epic: { min: 100, max: 130 },
+  folk: { min: 90, max: 120 },
+  rock: { min: 120, max: 150 },
+  reggae: { min: 80, max: 100 },
+  latin: { min: 110, max: 140 },
+  country: { min: 90, max: 120 },
+  blues: { min: 70, max: 100 },
+};
+
 export class AudioMixer {
   private ctx: AudioContext | null = null;
   private sections: Partial<Record<OrchestraSection, SectionAudio>> = {};
@@ -56,9 +71,18 @@ export class AudioMixer {
   private schedulerTimer: number | null = null;
   private beatStartTime = 0; // performance.now() when scheduler started
   private currentTheme: string = 'classic';
+  private currentSongName: string = '';
+  private currentArtistName: string = '';
 
-  async init(theme: string = 'classic') {
+  async init(theme: string = 'classic', songName: string = '', artistName: string = '') {
     this.currentTheme = theme;
+    this.currentSongName = songName;
+    this.currentArtistName = artistName;
+    
+    // Adjust BPM based on theme
+    const bpmRange = SONG_BPM_RANGES[theme] || { min: 100, max: 140 };
+    this.bpm = Math.floor((bpmRange.min + bpmRange.max) / 2) + Math.floor(Math.random() * 10);
+    
     this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     if (this.ctx.state === 'suspended') {
       await this.ctx.resume();
@@ -92,6 +116,14 @@ export class AudioMixer {
         merger,
       };
     }
+  }
+
+  getCurrentSongInfo(): { songName: string; artistName: string; bpm: number } {
+    return {
+      songName: this.currentSongName,
+      artistName: this.currentArtistName,
+      bpm: this.bpm,
+    };
   }
 
   private playNote(section: OrchestraSection, isChaotic: boolean) {
@@ -175,6 +207,10 @@ export class AudioMixer {
       type = 'sine';
     } else if (this.currentTheme === 'jazz') {
       type = section === 'woodwinds' ? 'triangle' : type;
+    } else if (this.currentTheme === 'rock') {
+      type = 'sawtooth'; // More aggressive
+    } else if (this.currentTheme === 'blues') {
+      type = 'sawtooth'; // Soulful
     }
 
     const osc = this.ctx.createOscillator();
@@ -187,6 +223,10 @@ export class AudioMixer {
     if (this.currentTheme === 'electronic') transpose = -12; // deep
     if (this.currentTheme === 'epic') transpose = -7;
     if (this.currentTheme === 'folk') transpose = 5;
+    if (this.currentTheme === 'rock') transpose = -5; // heavier
+    if (this.currentTheme === 'reggae') transpose = 2; // brighter
+    if (this.currentTheme === 'latin') transpose = -3; // warm
+    if (this.currentTheme === 'blues') transpose = -4; // soulful
 
     let finalFreq = freq;
     if (transpose !== 0) {
