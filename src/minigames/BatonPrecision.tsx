@@ -46,7 +46,7 @@ export const BatonPrecision: React.FC<Props> = ({ onComplete }) => {
   }, []);
 
   const calculateScore = () => {
-    const hits = currentPattern.length;
+    const hits = 3 - currentPattern.length;
     const score = hits * 500;
     const success = hits >= 3;
     onComplete({
@@ -121,6 +121,31 @@ export const BatonPrecision: React.FC<Props> = ({ onComplete }) => {
           cursor: 'crosshair',
         }}
       />
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', marginBottom: 20 }}>
+            {score >= 1500 ? '🎉 PERFECT!' : '🎯 Good Aim!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            Score: {score}
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {score >= 1500 ? 'You hit all targets!' : 'Keep practicing your aim!'}
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: 20, fontSize: 14, color: '#94a3b8' }}>
         Click all {pattern.length} targets before time runs out!

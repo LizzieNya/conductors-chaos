@@ -11,6 +11,7 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
   const [showSequence, setShowSequence] = useState(true);
   const [timeLeft, setTimeLeft] = useState(12);
   const [currentStep, setCurrentStep] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     // Generate sequence (5 instruments)
@@ -49,6 +50,7 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
   }, []);
 
   const checkResult = () => {
+    setGameOver(true);
     const correct = sequence.every((note, i) => note === userSequence[i]);
     const score = correct ? 1500 : Math.floor((userSequence.filter((n, i) => n === sequence[i]).length / sequence.length) * 1000);
     onComplete({
@@ -62,7 +64,7 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
   const colors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6'];
 
   const handleSelect = (index: number) => {
-    if (showSequence) return;
+    if (showSequence || gameOver) return;
 
     const newSequence = [...userSequence, index];
     setUserSequence(newSequence);
@@ -91,11 +93,11 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
       </div>
 
       {showSequence ? (
-        <div style={{ fontSize: 24, marginBottom: 40, color: '#60a5fa' }}>
+        <div style={{ fontSize: 24, marginBottom: 40, color: '#60a5fa', animation: 'pulse 1.5s infinite' }}>
           Watch the sequence...
         </div>
       ) : (
-        <div style={{ fontSize: 24, marginBottom: 40, color: '#22c55e' }}>
+        <div style={{ fontSize: 24, marginBottom: 40, color: '#22c55e', animation: 'pulse 1.5s infinite' }}>
           Now repeat it!
         </div>
       )}
@@ -115,6 +117,7 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
               fontSize: 36,
               opacity: showSequence ? 1 : 0.3,
               border: showSequence && i === currentStep ? '4px solid #fff' : 'none',
+              animation: showSequence && i === currentStep ? 'pulse 0.5s' : 'none',
             }}
           >
             {showSequence && instruments[inst]}
@@ -122,7 +125,7 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
         ))}
       </div>
 
-      {!showSequence && (
+      {!showSequence && !gameOver && (
         <div style={{ display: 'flex', gap: 15 }}>
           {instruments.map((inst, i) => (
             <button
@@ -137,11 +140,39 @@ export const InstrumentMemory: React.FC<Props> = ({ onComplete }) => {
                 fontSize: 40,
                 cursor: 'pointer',
                 transition: 'transform 0.1s',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
               }}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               {inst}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', marginBottom: 20 }}>
+            {userSequence.every((n, i) => n === sequence[i]) ? '🎉 PERFECT!' : '🎵 Good Job!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            Sequence: {userSequence.length}/{sequence.length} correct
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {userSequence.every((n, i) => n === sequence[i]) ? 'You remembered the sequence perfectly!' : 'Keep practicing your memory!'}
+          </div>
         </div>
       )}
     </div>

@@ -23,6 +23,7 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
   const [powerUp, setPowerUp] = useState<{ x: number; y: number; type: string } | null>(null);
+  const [gameOver, setGameOver] = useState(false);
   const noteIdRef = useRef(0);
   const powerUpTimer = useRef<number | null>(null);
 
@@ -49,7 +50,7 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
 
     // Spawn power-ups occasionally
     const powerUpInterval = setInterval(() => {
-      if (Math.random() < 0.3 && !powerUp) {
+      if (Math.random() < 0.3 && !powerUp && !gameOver) {
         setPowerUp({
           x: Math.random() * 600 + 100,
           y: -50,
@@ -79,8 +80,6 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
                 setMaxCombo(m => Math.max(m, newCombo));
                 return newCombo;
               });
-              // Play sound
-              // audioMixer.playNote('percussion', false);
               return false;
             }
             // Reset combo on miss
@@ -92,7 +91,7 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
       );
 
       // Update power-up
-      if (powerUp) {
+      if (powerUp && !gameOver) {
         setPowerUp((p) => {
           if (!p) return null;
           const newY = p.y + 3;
@@ -124,11 +123,8 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
           clearInterval(updateInterval);
           clearInterval(powerUpInterval);
           if (powerUpTimer.current) clearTimeout(powerUpTimer.current);
-          onComplete({
-            success: score >= 800,
-            score,
-            bonus: score >= 1500 ? 800 : maxCombo >= 10 ? 500 : 0,
-          });
+          setGameOver(true);
+          calculateScore();
           return 0;
         }
         return t - 1;
@@ -142,7 +138,17 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
       clearInterval(powerUpInterval);
       if (powerUpTimer.current) clearTimeout(powerUpTimer.current);
     };
-  }, [basketX, score, combo, timeLeft, powerUp]);
+  }, [basketX, score, combo, timeLeft, powerUp, gameOver]);
+
+  const calculateScore = () => {
+    const success = score >= 800;
+    const bonus = score >= 1500 ? 800 : maxCombo >= 10 ? 500 : 0;
+    onComplete({
+      success,
+      score,
+      bonus,
+    });
+  };
 
   return (
     <div
@@ -252,6 +258,31 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
       >
         🎺
       </div>
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', marginBottom: 20 }}>
+            {score >= 800 ? '🎉 PERFECT!' : '🎵 Good Job!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            Score: {score} | Max Combo: x{maxCombo}
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {score >= 800 ? 'You caught all the notes!' : 'Keep practicing!'}
+          </div>
+        </div>
+      )}
 
       {/* Instructions */}
       <div style={{

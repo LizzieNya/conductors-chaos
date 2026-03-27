@@ -9,6 +9,7 @@ export const PitchPerfect: React.FC<Props> = ({ onComplete }) => {
   const [targetNote, setTargetNote] = useState(0);
   const [currentNote, setCurrentNote] = useState(0);
   const [timeLeft, setTimeLeft] = useState(8);
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     // Generate target note
@@ -31,6 +32,7 @@ export const PitchPerfect: React.FC<Props> = ({ onComplete }) => {
   }, []);
 
   const calculateScore = () => {
+    setGameOver(true);
     const diff = Math.abs(targetNote - currentNote);
     let points = 0;
     let success = false;
@@ -132,7 +134,10 @@ export const PitchPerfect: React.FC<Props> = ({ onComplete }) => {
             color: '#fff',
             cursor: 'pointer',
             transition: 'transform 0.1s',
+            boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)',
           }}
+          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           ⬇️
         </button>
@@ -148,11 +153,39 @@ export const PitchPerfect: React.FC<Props> = ({ onComplete }) => {
             color: '#fff',
             cursor: 'pointer',
             transition: 'transform 0.1s',
+            boxShadow: '0 4px 15px rgba(59, 130, 246, 0.3)',
           }}
+          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
+          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           ⬆️
         </button>
       </div>
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', marginBottom: 20 }}>
+            {Math.abs(targetNote - currentNote) <= 2 ? '🎉 PERFECT!' : '🎵 Good Job!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            {Math.abs(targetNote - currentNote) === 0 ? 'Exact match!' : `Close! Diff: ${Math.abs(targetNote - currentNote)}`}
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {Math.abs(targetNote - currentNote) <= 2 ? 'You matched the pitch!' : 'Keep practicing your ear!'}
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: 30, fontSize: 14, color: '#94a3b8' }}>
         Adjust pitch to match target!

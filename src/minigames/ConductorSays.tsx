@@ -17,6 +17,7 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
   const [score, setScore] = useState(0);
   const [failed, setFailed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
     const commandList: Command[] = [
@@ -47,7 +48,7 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (currentIndex >= commands.length || failed) return;
+      if (currentIndex >= commands.length || failed || gameOver) return;
 
       const current = commands[currentIndex];
       let pressed: string = '';
@@ -81,13 +82,16 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
 
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [currentIndex, commands, failed]);
+  }, [currentIndex, commands, failed, gameOver]);
 
   const finishGame = () => {
+    setGameOver(true);
+    const success = !failed && currentIndex >= commands.length;
+    const bonus = success ? 800 : 0;
     onComplete({
-      success: !failed && currentIndex >= commands.length,
+      success,
       score,
-      bonus: !failed && currentIndex >= commands.length ? 800 : 0,
+      bonus,
     });
   };
 
@@ -109,7 +113,7 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
         Score: {score} | Time: {timeLeft}s
       </div>
 
-      {current && !failed && (
+      {current && !failed && !gameOver && (
         <div style={{
           fontSize: 36,
           fontWeight: 'bold',
@@ -119,17 +123,43 @@ export const ConductorSays: React.FC<Props> = ({ onComplete }) => {
           background: 'rgba(0,0,0,0.3)',
           borderRadius: 20,
           marginBottom: 40,
+          animation: 'popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}>
           {current.text}
         </div>
       )}
 
-      {failed && (
-        <div style={{ fontSize: 48, color: '#fca5a5' }}>❌ Wrong!</div>
+      {failed && !gameOver && (
+        <div style={{ fontSize: 48, color: '#fca5a5', animation: 'shake 0.5s' }}>❌ Wrong!</div>
       )}
 
-      {currentIndex >= commands.length && !failed && (
-        <div style={{ fontSize: 48, color: '#6ee7b7' }}>✅ Perfect!</div>
+      {currentIndex >= commands.length && !failed && !gameOver && (
+        <div style={{ fontSize: 48, color: '#6ee7b7', animation: 'popIn 0.3s' }}>✅ Perfect!</div>
+      )}
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: failed ? '#ef4444' : '#22c55e', marginBottom: 20 }}>
+            {failed ? '❌ GAME OVER' : '🎉 PERFECT!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            Score: {score}
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {failed ? 'You made a mistake!' : 'You followed all commands correctly!'}
+          </div>
+        </div>
       )}
 
       <div style={{ fontSize: 16, color: '#d1fae5', textAlign: 'center', marginTop: 40 }}>
