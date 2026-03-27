@@ -7,6 +7,8 @@ interface Note {
   y: number;
   type: string;
   speed: number;
+  color: string;
+  value: number;
 }
 
 interface Props {
@@ -19,22 +21,42 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [combo, setCombo] = useState(0);
+  const [maxCombo, setMaxCombo] = useState(0);
+  const [powerUp, setPowerUp] = useState<{ x: number; y: number; type: string } | null>(null);
   const noteIdRef = useRef(0);
+  const powerUpTimer = useRef<number | null>(null);
 
   useEffect(() => {
     // Spawn notes
     const spawnInterval = setInterval(() => {
+      const types = ['♪', '♫', '♬', '🎵', '🎶'];
+      const colors = ['#fbbf24', '#3b82f6', '#22c55e', '#f59e0b', '#ec4899'];
+      const values = [100, 150, 200, 250, 300];
+      
       setNotes((prev) => [
         ...prev,
         {
           id: noteIdRef.current++,
-          x: Math.random() * 700 + 50,
-          y: 0,
-          type: ['♪', '♫', '♬', '🎵'][Math.floor(Math.random() * 4)],
-          speed: 2 + Math.random() * 2,
+          x: Math.random() * 600 + 100,
+          y: -50,
+          type: types[Math.floor(Math.random() * types.length)],
+          speed: 3 + Math.random() * 3 + (10 - timeLeft) * 0.2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          value: values[Math.floor(Math.random() * values.length)],
         },
       ]);
-    }, 800);
+    }, 700);
+
+    // Spawn power-ups occasionally
+    const powerUpInterval = setInterval(() => {
+      if (Math.random() < 0.3 && !powerUp) {
+        setPowerUp({
+          x: Math.random() * 600 + 100,
+          y: -50,
+          type: ['speed', 'multiplier', 'extraTime'][Math.floor(Math.random() * 3)],
+        });
+      }
+    }, 3000);
 
     // Update notes
     const updateInterval = setInterval(() => {
@@ -46,11 +68,19 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
             if (
               note.y > 450 &&
               note.y < 500 &&
-              note.x > basketX - 40 &&
-              note.x < basketX + 40
+              note.x > basketX - 50 &&
+              note.x < basketX + 50
             ) {
-              setScore((s) => s + 100 + combo * 50);
-              setCombo((c) => Math.min(c + 1, 10));
+              // Caught!
+              const points = note.value * (1 + combo * 0.1);
+              setScore((s) => s + Math.floor(points));
+              setCombo((c) => {
+                const newCombo = Math.min(c + 1, 20);
+                setMaxCombo(m => Math.max(m, newCombo));
+                return newCombo;
+              });
+              // Play sound
+              // audioMixer.playNote('percussion', false);
               return false;
             }
             // Reset combo on miss
@@ -60,6 +90,29 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
             return note.y < 520;
           })
       );
+
+      // Update power-up
+      if (powerUp) {
+        setPowerUp((p) => {
+          if (!p) return null;
+          const newY = p.y + 3;
+          
+          // Check power-up collection
+          if (newY > 450 && newY < 500 && p.x > basketX - 50 && p.x < basketX + 50) {
+            // Collect power-up
+            if (p.type === 'speed') {
+              // Speed power-up logic
+            } else if (p.type === 'multiplier') {
+              // Multiplier logic
+            } else if (p.type === 'extraTime') {
+              setTimeLeft(t => Math.min(t + 3, 10));
+            }
+            return null;
+          }
+          
+          return newY > 520 ? null : { ...p, y: newY };
+        });
+      }
     }, 16);
 
     // Countdown
@@ -69,10 +122,12 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
           clearInterval(timer);
           clearInterval(spawnInterval);
           clearInterval(updateInterval);
+          clearInterval(powerUpInterval);
+          if (powerUpTimer.current) clearTimeout(powerUpTimer.current);
           onComplete({
-            success: score >= 500,
+            success: score >= 800,
             score,
-            bonus: score >= 1000 ? 500 : 0,
+            bonus: score >= 1500 ? 800 : maxCombo >= 10 ? 500 : 0,
           });
           return 0;
         }
@@ -84,20 +139,25 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
       clearInterval(spawnInterval);
       clearInterval(updateInterval);
       clearInterval(timer);
+      clearInterval(powerUpInterval);
+      if (powerUpTimer.current) clearTimeout(powerUpTimer.current);
     };
-  }, [basketX, score, combo]);
+  }, [basketX, score, combo, timeLeft, powerUp]);
 
   return (
     <div
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'linear-gradient(180deg, #1a0a2e 0%, #0f3460 100%)',
+        background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)',
         overflow: 'hidden',
         zIndex: 1000,
+        cursor: 'none',
       }}
       onMouseMove={(e) => setBasketX(e.clientX)}
+      onTouchMove={(e) => setBasketX(e.touches[0].clientX)}
     >
+      {/* HUD */}
       <div style={{
         position: 'absolute',
         top: 20,
@@ -106,13 +166,38 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
         fontSize: 32,
         color: '#fff',
         textAlign: 'center',
+        textShadow: '0 2px 10px rgba(0,0,0,0.5)',
       }}>
-        <div>🎶 Note Catcher</div>
-        <div style={{ fontSize: 20, marginTop: 10 }}>
-          Score: {score} | Time: {timeLeft}s | Combo: x{combo}
+        <div style={{ fontSize: 40, fontWeight: 900, marginBottom: 10 }}>
+          🎶 Note Catcher
+        </div>
+        <div style={{ 
+          display: 'flex', 
+          gap: 20, 
+          justifyContent: 'center',
+          fontSize: 18,
+        }}>
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: 12 }}>
+            Score: {score}
+          </div>
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: 12 }}>
+            Time: {timeLeft}s
+          </div>
+          <div style={{ 
+            background: combo > 1 ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : 'rgba(0,0,0,0.3)',
+            padding: '6px 14px', 
+            borderRadius: 12,
+            fontWeight: combo > 1 ? 900 : 400,
+          }}>
+            Combo: x{combo}
+          </div>
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '6px 14px', borderRadius: 12 }}>
+            Max: x{maxCombo}
+          </div>
         </div>
       </div>
 
+      {/* Notes */}
       {notes.map((note) => (
         <div
           key={note.id}
@@ -120,31 +205,68 @@ export const NoteCatch: React.FC<Props> = ({ onComplete }) => {
             position: 'absolute',
             left: note.x,
             top: note.y,
-            fontSize: 32,
-            pointerEvents: 'none',
+            fontSize: 36,
+            transform: 'rotate(15deg)',
+            filter: `drop-shadow(0 0 10px ${note.color})`,
+            animation: 'spin 2s linear infinite',
           }}
         >
           {note.type}
         </div>
       ))}
 
+      {/* Power-up */}
+      {powerUp && (
+        <div
+          style={{
+            position: 'absolute',
+            left: powerUp.x,
+            top: powerUp.y,
+            fontSize: 40,
+            animation: 'pulse 0.5s ease-in-out infinite',
+          }}
+        >
+          {powerUp.type === 'speed' ? '⚡' : powerUp.type === 'multiplier' ? '🔥' : '⏰'}
+        </div>
+      )}
+
+      {/* Basket */}
       <div
         style={{
           position: 'absolute',
-          left: basketX - 40,
+          left: basketX - 50,
           bottom: 20,
-          width: 80,
-          height: 60,
+          width: 100,
+          height: 70,
           background: 'linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%)',
-          borderRadius: '8px 8px 40px 40px',
-          border: '3px solid #d97706',
+          borderRadius: '10px 10px 50px 50px',
+          border: '4px solid #d97706',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 32,
+          fontSize: 40,
+          boxShadow: '0 10px 30px rgba(251, 191, 36, 0.4)',
+          transform: `rotate(${(basketX - 400) * 0.05}deg)`,
+          transition: 'transform 0.1s',
         }}
       >
         🎺
+      </div>
+
+      {/* Instructions */}
+      <div style={{
+        position: 'absolute',
+        bottom: 10,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: 14,
+        color: '#94a3b8',
+        textAlign: 'center',
+      }}>
+        Move mouse/touch to catch notes! <br />
+        <span style={{ fontSize: 12 }}>
+          Catch notes in combo for bonus points!
+        </span>
       </div>
     </div>
   );
