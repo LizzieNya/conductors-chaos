@@ -13,6 +13,7 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
   const [feedback, setFeedback] = useState<{ text: string; color: string; x: number; y: number } | null>(null);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
+  const [gameOver, setGameOver] = useState(false);
   const feedbackTimer = useRef<number | null>(null);
   const bpm = 120;
   const beatInterval = 60000 / bpm;
@@ -55,6 +56,7 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
   };
 
   const calculateScore = () => {
+    setGameOver(true);
     let perfectTaps = 0;
     let goodTaps = 0;
     let badTaps = 0;
@@ -99,6 +101,8 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
   };
 
   const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
+    if (gameOver) return;
+    
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     const x = e instanceof MouseEvent ? e.clientX : e.touches[0].clientX;
     const y = e instanceof MouseEvent ? e.clientY : e.touches[0].clientY;
@@ -253,7 +257,7 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
       </div>
 
       {/* Feedback Display */}
-      {feedback && (
+      {feedback && !gameOver && (
         <div style={{
           position: 'absolute',
           left: feedback.x,
@@ -267,6 +271,41 @@ export const TempoTap: React.FC<Props> = ({ onComplete }) => {
           animation: 'floatUp 0.5s ease-out forwards',
         }}>
           {feedback.text}
+        </div>
+      )}
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', marginBottom: 20 }}>
+            {taps.filter((t) => {
+              const closestBeat = beatTimes.reduce((prev, curr) =>
+                Math.abs(curr - t) < Math.abs(prev - t) ? curr : prev
+              );
+              return Math.abs(closestBeat - t) < 80;
+            }).length >= 6 ? '🎉 PERFECT!' : '🎵 Good Job!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            Score: {taps.length * 250} | Max Combo: x{maxCombo}
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {taps.filter((t) => {
+              const closestBeat = beatTimes.reduce((prev, curr) =>
+                Math.abs(curr - t) < Math.abs(prev - t) ? curr : prev
+              );
+              return Math.abs(closestBeat - t) < 80;
+            }).length >= 6 ? 'Perfect timing!' : 'Keep practicing your rhythm!'}
+          </div>
         </div>
       )}
 

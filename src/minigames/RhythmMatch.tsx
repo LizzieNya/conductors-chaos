@@ -12,6 +12,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(8);
   const [activeNote, setActiveNote] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; color: string } | null>(null);
+  const [gameOver, setGameOver] = useState(false);
   const feedbackTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
   }, []);
 
   const checkResult = () => {
+    setGameOver(true);
     const correct = pattern.every((note, i) => note === userPattern[i]);
     const matches = userPattern.filter((n, i) => n === pattern[i]).length;
     const accuracy = matches / pattern.length;
@@ -96,7 +98,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
   };
 
   const handleTap = (index: number) => {
-    if (showPattern || userPattern.length >= pattern.length) return;
+    if (showPattern || userPattern.length >= pattern.length || gameOver) return;
     
     const newPattern = [...userPattern, index];
     setUserPattern(newPattern);
@@ -159,7 +161,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
       </div>
 
       {/* Feedback Display */}
-      {feedback && (
+      {feedback && !gameOver && (
         <div style={{
           fontSize: 36,
           fontWeight: 900,
@@ -226,7 +228,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
       </div>
 
       {/* User Pattern Display */}
-      {userPattern.length > 0 && (
+      {userPattern.length > 0 && !showPattern && (
         <div style={{ 
           display: 'flex', 
           gap: 15, 
@@ -257,7 +259,7 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
       )}
 
       {/* Input Buttons */}
-      {!showPattern && (
+      {!showPattern && !gameOver && (
         <div style={{ display: 'flex', gap: 12 }}>
           {colors.map((color, i) => (
             <button
@@ -303,6 +305,31 @@ export const RhythmMatch: React.FC<Props> = ({ onComplete }) => {
               </div>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Game Over Overlay */}
+      {gameOver && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+          animation: 'fadeIn 0.3s ease-out',
+        }}>
+          <div style={{ fontSize: 48, fontWeight: 900, color: '#fbbf24', marginBottom: 20 }}>
+            {pattern.every((n, i) => n === userPattern[i]) ? '🎉 PERFECT!' : '🎵 Good Job!'}
+          </div>
+          <div style={{ fontSize: 24, color: '#fff', marginBottom: 30 }}>
+            {pattern.every((n, i) => n === userPattern[i]) ? 'Perfect rhythm!' : `${userPattern.length}/${pattern.length} correct`}
+          </div>
+          <div style={{ fontSize: 14, color: '#94a3b8' }}>
+            {pattern.every((n, i) => n === userPattern[i]) ? 'You matched the rhythm perfectly!' : 'Keep practicing your rhythm!'}
+          </div>
         </div>
       )}
 
