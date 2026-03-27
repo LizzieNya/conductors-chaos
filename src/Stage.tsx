@@ -1476,10 +1476,10 @@ export const Stage: React.FC = () => {
             <div style={{
               fontSize: 16,
               fontWeight: 900,
-              color: (90 - concertTime) < 15 ? '#f87171' : '#f8fafc',
+              color: (30 - concertTime) < 15 ? '#f87171' : '#f8fafc',
               fontVariantNumeric: 'tabular-nums',
             }}>
-              {Math.max(0, Math.floor(90 - concertTime))}s
+              {Math.max(0, Math.floor(30 - concertTime))}s
             </div>
           </div>
         </div>
