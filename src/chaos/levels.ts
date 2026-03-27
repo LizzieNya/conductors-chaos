@@ -120,10 +120,10 @@ export function generateLevels(): LevelDef[] {
 
   for (let i = 1; i <= 30; i++) {
     let title = `Stage ${i}`;
-    // Shorter, more intense levels
-    let duration = 45 + Math.floor(i * 1);
-    let chaosCount = 5 + Math.floor(i * 1);
-    let bpm = 120 - Math.floor(i * 0.5); // BPM increases with level
+    // Much shorter, more intense levels
+    let duration = 30 + Math.floor(i * 0.5);
+    let chaosCount = 4 + Math.floor(i * 0.8);
+    let bpm = 120 + Math.floor(i * 0.5); // BPM increases with level
     let allowedChaos: ChaosType[] = ['wrong_notes'];
 
     if (i > 3) allowedChaos.push('tempo_rebellion');
