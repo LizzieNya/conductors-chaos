@@ -22,6 +22,10 @@ export interface UpgradeEffect {
   harmonyDecayMultiplier?: number;
   startingCombo?: number;
   autoFixChance?: number;
+  chaosDuration?: number;
+  scoreMultiplier?: number;
+  powerUpChance?: number;
+  batonSize?: number;
 }
 
 export const UPGRADES: Upgrade[] = [
@@ -29,7 +33,7 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'swift_baton',
     name: 'Swift Baton',
-    description: 'Fix chaos faster with improved conducting technique',
+    description: 'Fix chaos 15% faster per level',
     category: 'speed',
     icon: '⚡',
     maxLevel: 5,
@@ -39,7 +43,7 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'maestro_focus',
     name: 'Maestro Focus',
-    description: 'Chaos takes longer to spread to other sections',
+    description: 'Chaos lasts 20% longer per level',
     category: 'speed',
     icon: '🎯',
     maxLevel: 5,
@@ -49,19 +53,29 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'rhythm_master',
     name: 'Rhythm Master',
-    description: 'Larger window for on-beat bonuses',
+    description: 'Beat window 30% larger per level',
     category: 'speed',
     icon: '🎵',
     maxLevel: 3,
     baseCost: 2500,
     effect: (level) => ({ beatWindowMultiplier: 1 + level * 0.3 }),
   },
+  {
+    id: 'baton_weight',
+    name: 'Baton Weight',
+    description: 'Baton is 20% larger per level for easier targeting',
+    category: 'speed',
+    icon: '📏',
+    maxLevel: 3,
+    baseCost: 1800,
+    effect: (level) => ({ batonSize: 1 + level * 0.2 }),
+  },
 
   // COMBO CATEGORY
   {
     id: 'combo_keeper',
     name: 'Combo Keeper',
-    description: 'Earn more points from combo multipliers',
+    description: '20% more score per combo level',
     category: 'combo',
     icon: '🔥',
     maxLevel: 5,
@@ -71,7 +85,7 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'warm_start',
     name: 'Warm Start',
-    description: 'Begin each concert with a combo boost',
+    description: 'Start with +2 combo per level',
     category: 'combo',
     icon: '🌟',
     maxLevel: 3,
@@ -81,19 +95,29 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'harmony_sustain',
     name: 'Harmony Sustain',
-    description: 'Harmony meter decays slower when sections are chaotic',
+    description: 'Harmony decays 15% slower per level',
     category: 'combo',
     icon: '💫',
     maxLevel: 4,
     baseCost: 2500,
     effect: (level) => ({ harmonyDecayMultiplier: 1 - level * 0.15 }),
   },
+  {
+    id: 'combo_starter',
+    name: 'Combo Starter',
+    description: 'Start with 5 combo on level 1',
+    category: 'combo',
+    icon: '🚀',
+    maxLevel: 1,
+    baseCost: 5000,
+    effect: () => ({ startingCombo: 5 }),
+  },
 
   // POWER CATEGORY
   {
     id: 'chaos_shield',
     name: 'Chaos Shield',
-    description: 'Reduce chance of chaos spreading to adjacent sections',
+    description: '15% less spread chance per level',
     category: 'power',
     icon: '🛡️',
     maxLevel: 5,
@@ -103,19 +127,39 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'divine_intervention',
     name: 'Divine Intervention',
-    description: 'Small chance to auto-fix chaos when it appears',
+    description: '8% auto-fix chance per level',
     category: 'power',
     icon: '✨',
     maxLevel: 3,
     baseCost: 4000,
     effect: (level) => ({ autoFixChance: level * 0.08 }),
   },
+  {
+    id: 'power_up',
+    name: 'Power Up',
+    description: '20% more power-ups spawn',
+    category: 'power',
+    icon: '🎁',
+    maxLevel: 3,
+    baseCost: 3000,
+    effect: (level) => ({ powerUpChance: 0.2 * level }),
+  },
+  {
+    id: 'chaos_duration',
+    name: 'Chaos Duration',
+    description: 'Chaos lasts 10% longer per level',
+    category: 'power',
+    icon: '⏳',
+    maxLevel: 3,
+    baseCost: 2800,
+    effect: (level) => ({ chaosDuration: 1 + level * 0.1 }),
+  },
 
   // SPECIAL CATEGORY
   {
     id: 'time_dilation',
     name: 'Time Dilation',
-    description: 'Slow down time briefly when 3+ sections are chaotic',
+    description: 'Slow motion for 3s when 3+ sections chaotic',
     category: 'special',
     icon: '⏰',
     maxLevel: 1,
@@ -125,7 +169,7 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'perfect_pitch',
     name: 'Perfect Pitch',
-    description: 'See chaos warnings 2 seconds before they trigger',
+    description: '2s warning before chaos triggers',
     category: 'special',
     icon: '👁️',
     maxLevel: 1,
@@ -135,12 +179,22 @@ export const UPGRADES: Upgrade[] = [
   {
     id: 'encore_bonus',
     name: 'Encore Bonus',
-    description: 'Earn 50% more coins from perfect performances (4+ stars)',
+    description: '50% more coins for 4+ star performances',
     category: 'special',
     icon: '💰',
     maxLevel: 1,
     baseCost: 4500,
     effect: () => ({}),
+  },
+  {
+    id: 'score_boost',
+    name: 'Score Boost',
+    description: '10% more score overall',
+    category: 'special',
+    icon: '📈',
+    maxLevel: 3,
+    baseCost: 4000,
+    effect: (level) => ({ scoreMultiplier: 1 + level * 0.1 }),
   },
 ];
 
@@ -230,6 +284,10 @@ export const useUpgradeStore = create<UpgradeState>((set, get) => {
         harmonyDecayMultiplier: 1,
         startingCombo: 0,
         autoFixChance: 0,
+        chaosDuration: 1,
+        scoreMultiplier: 1,
+        powerUpChance: 0,
+        batonSize: 1,
       };
 
       for (const upgrade of UPGRADES) {
@@ -254,6 +312,18 @@ export const useUpgradeStore = create<UpgradeState>((set, get) => {
           }
           if (effect.harmonyDecayMultiplier) {
             totalEffect.harmonyDecayMultiplier! *= effect.harmonyDecayMultiplier;
+          }
+          if (effect.chaosDuration) {
+            totalEffect.chaosDuration! *= effect.chaosDuration;
+          }
+          if (effect.scoreMultiplier) {
+            totalEffect.scoreMultiplier! *= effect.scoreMultiplier;
+          }
+          if (effect.powerUpChance) {
+            totalEffect.powerUpChance! += effect.powerUpChance;
+          }
+          if (effect.batonSize) {
+            totalEffect.batonSize! *= effect.batonSize;
           }
           
           if (effect.startingCombo) {
